@@ -1,0 +1,29 @@
+# ── Supabase credentials ──────────────────────────────────────────────────────
+# supabase-config.json holds the project URL and publishable key and is injected
+# into the built file by _build.py. Keeping it out of git means the key never
+# enters repository history.
+supabase-config.json
+
+# ── Build output ──────────────────────────────────────────────────────────────
+# The dashboard is a single generated file. Commit the source; run `npm run build`
+# to produce it. deploy/ is just a copy ready for Vercel.
+Chitrak — Rulebook Checklist.html
+deploy/
+_head.html
+_new_script.html
+_tail.html
+__pycache__/
+*.pyc
+
+# ── Source documents ──────────────────────────────────────────────────────────
+# 27 MB of PDFs plus the PRD. They are the authoritative rulebook, but they
+# bloat the repo and are not needed to build. Keep your own copy.
+*.pdf
+*.docx
+*.Zone.Identifier
+
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Test scratch ──────────────────────────────────────────────────────────────
+mock-supabase.json
