@@ -17,6 +17,13 @@ TAIL = '_tail.html'
 def ensure_fragments():
     if all(os.path.exists(f) for f in (HEAD, TAIL)) and os.path.exists(SCRIPT):
         return
+    if not os.path.exists(TARGET):
+        raise SystemExit(
+            'error: cannot build.\n'
+            '  %s is generated, and %s / %s are missing, so there is no\n'
+            '  source to recover them from. Restore the two fragment files\n'
+            '  from git (`git checkout -- %s %s`) and rebuild.'
+            % (TARGET, HEAD, TAIL, HEAD, TAIL))
     src = io.open(TARGET, encoding='utf-8').read()
     i = src.index('<script>')
     j = src.rindex('</script>') + len('</script>')

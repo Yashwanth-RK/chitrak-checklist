@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chitrak — Rulebook Checklist</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23f97316'/%3E%3Cpath d='M13 2 3 14h9l-1 8 10-12h-9z' fill='white'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#1a1d26;--surface2:#22263a;--border:#2d3148;
+  --fg:#e2e8f0;--muted:#64748b;--orange:#f97316;--green:#22c55e;
+  --red:#ef4444;--fs:13px;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,sans-serif;font-size:var(--fs);-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--surface)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;color:inherit;font-size:inherit;font-family:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit}
+
+/* Layout */
+#app{display:flex;height:100vh;overflow:hidden}
+#sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#main{flex:1;overflow-y:auto;overflow-x:hidden}
+
+/* Sidebar */
+.sb-logo{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.sb-logo svg{color:var(--orange)}
+.sb-title{font-weight:800;letter-spacing:.15em;font-size:12px;color:var(--orange);text-transform:uppercase}
+.sb-nav{flex:1;padding:8px 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:5px;font-size:12.5px;font-weight:500;color:var(--muted);border-left:2px solid transparent;margin-bottom:2px;cursor:pointer;transition:all .15s}
+.nav-item.active{background:var(--surface2);color:var(--orange);border-left-color:var(--orange)}
+.nav-item:not(.active):hover{color:var(--fg);background:rgba(255,255,255,.03)}
+.sb-footer{padding:12px 18px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+
+/* Page */
+.page{display:none;padding:24px;max-width:900px}
+.page.active{display:block}
+.page-hd{margin-bottom:20px}
+.page-hd h1{font-size:18px;font-weight:700;letter-spacing:.02em}
+.page-hd p{font-size:11.5px;color:var(--muted);margin-top:3px}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px;margin-bottom:12px}
+.card-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:14px}
+
+/* Progress ring */
+.ring-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700}
+
+/* Progress bar */
+.pbar-track{height:5px;background:var(--border);border-radius:99px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:99px;transition:width .35s ease}
+
+/* Checklist item */
+.cl-item{background:var(--surface);border:1px solid var(--border);border-radius:5px;margin-bottom:5px;transition:background .15s,border-color .15s}
+.cl-item.done{background:rgba(34,197,94,.05);border-color:rgba(34,197,94,.2)}
+.cl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;cursor:default}
+.cl-check{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.cl-check.done{background:var(--green);border-color:var(--green)}
+.cl-body{flex:1;min-width:0}
+.cl-code{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--orange);opacity:.85}
+.cl-title{font-size:13px;font-weight:500;margin-top:1px;transition:color .15s}
+.cl-item.done .cl-title{color:var(--muted);text-decoration:line-through}
+.cl-expand{color:var(--muted);opacity:.6;flex-shrink:0;transition:transform .2s}
+.cl-expand.open{transform:rotate(90deg)}
+.cl-detail{padding:0 12px 10px 37px;border-top:1px solid var(--border)}
+.cl-desc{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:8px;margin-bottom:10px}
+.cl-placeholder{font-size:11px;color:var(--muted);opacity:.6;font-style:italic;margin-top:8px;margin-bottom:10px;padding:6px 8px;background:rgba(249,115,22,.06);border-radius:4px;border:1px solid rgba(249,115,22,.15)}
+.cl-note-display{font-size:11.5px;background:var(--surface2);padding:6px 9px;border-radius:4px;color:var(--muted);line-height:1.5;margin-bottom:6px}
+.cl-note-area{width:100%;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);padding:6px 9px;font-size:11.5px;resize:none;outline:none;line-height:1.5}
+.cl-note-area:focus{border-color:var(--orange)}
+.cl-btn-row{display:flex;gap:6px;margin-top:6px}
+.btn{padding:4px 10px;border-radius:4px;font-size:11.5px;font-weight:500;cursor:pointer;border:none;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-orange{background:var(--orange);color:#fff}
+.btn-ghost{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+
+/* Section header */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;margin-top:18px}
+.sec-hd:first-child{margin-top:0}
+.sec-name{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--orange)}
+.sec-name.ti{color:var(--green)}
+.sec-ct{font-size:11px;color:var(--muted)}
+.subsec-name{font-size:11px;font-weight:600;color:var(--muted);margin:8px 0 4px 0}
+
+/* Search + filter bar */
+.bar{display:flex;gap:8px;margin-bottom:18px}
+.search-wrap{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:7px 12px}
+.search-wrap:focus-within{border-color:rgba(249,115,22,.5)}
+.search-wrap input{flex:1;background:transparent;border:none;outline:none;color:var(--fg);font-size:13px}
+.search-wrap input::placeholder{color:var(--muted)}
+.search-clear{color:var(--muted);font-size:11px;cursor:pointer}
+select.filter-sel{appearance:none;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:7px 30px 7px 12px;color:var(--fg);font-size:12.5px;outline:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+
+/* Dashboard grid */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px}
+.big-progress{display:flex;align-items:center;gap:16px}
+.big-pct{font-size:30px;font-weight:700}
+.big-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.big-green{color:var(--green)}
+
+/* Team */
+.team-list{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.team-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border)}
+.team-row:first-child{border-top:none}
+.team-av{width:32px;height:32px;border-radius:50%;background:var(--surface2);color:var(--orange);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.team-name{font-weight:500}
+.team-role{font-size:11.5px;color:var(--muted)}
+.team-del{margin-left:auto;color:var(--muted);opacity:0;transition:opacity .15s;padding:4px}
+.team-row:hover .team-del{opacity:1}
+.team-empty{text-align:center;padding:40px 20px;color:var(--muted)}
+
+/* Warning banner */
+.warn-banner{background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.22);border-radius:5px;padding:10px 12px;font-size:11.5px;color:var(--muted);margin-bottom:16px}
+
+/* Add form */
+.add-form{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:16px}
+.form-row{display:flex;gap:8px;margin-bottom:8px}
+.form-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:7px 10px;color:var(--fg);outline:none;font-size:13px}
+.form-input:focus{border-color:var(--orange)}
+
+/* Error */
+.err-txt{font-size:11px;color:var(--red);margin-top:4px}
+
+/* Note indicator */
+.note-dot{width:5px;height:5px;border-radius:50%;background:var(--orange);opacity:.6;flex-shrink:0;margin-top:5px}
+
+/* Mobile */
+@media(max-width:680px){
+  #sidebar{position:fixed;bottom:0;left:0;right:0;width:100%;height:56px;flex-direction:row;border-right:none;border-top:1px solid var(--border);z-index:100}
+  .sb-logo,.sb-footer{display:none}
+  .sb-nav{display:flex;flex-direction:row;flex:1;padding:4px;align-items:center;justify-content:space-around}
+  .nav-item{flex-direction:column;gap:3px;padding:6px;border-left:none;border-bottom:2px solid transparent;border-radius:4px;font-size:10px;min-width:56px;text-align:center;margin-bottom:0}
+  .nav-item.active{background:transparent;border-bottom-color:var(--orange)}
+  .nav-item svg{display:block}
+  #main{margin-bottom:56px}
+  .dash-grid{grid-template-columns:1fr}
+  .form-row{flex-direction:column}
+}
+
+/* ── Enhanced v1.1 UI ─────────────────────────────────────────────────────── */
+:root{
+  --blue:#60a5fa;--surface3:#151823;--shadow:0 10px 30px rgba(0,0,0,.18);
+}
+body{background:
+  radial-gradient(circle at 82% -10%,rgba(249,115,22,.08),transparent 28%),
+  var(--bg)}
+#main{scroll-behavior:smooth}
+.page{max-width:1120px}
+.page-hd{position:relative}
+.page-hd h1{font-size:20px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 18px}
+.topbar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.025);font-size:10.5px;color:var(--muted)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.08)}
+.top-actions{display:flex;gap:6px;flex-wrap:wrap}
+.icon-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--muted);font-size:11px}
+.icon-btn:hover{color:var(--fg);border-color:rgba(249,115,22,.45);background:var(--surface2)}
+.icon-btn.danger:hover{color:#fecaca;border-color:rgba(239,68,68,.45)}
+.dash-hero{display:grid;grid-template-columns:1.45fr .55fr;gap:12px;margin-bottom:12px}
+.hero-card{background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(34,197,94,.04) 60%,var(--surface));border:1px solid rgba(249,115,22,.22);border-radius:8px;padding:20px;box-shadow:var(--shadow)}
+.hero-title{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--orange);font-weight:700}
+.hero-pct{font-size:42px;font-weight:800;line-height:1;margin:8px 0 5px}
+.hero-sub{font-size:11.5px;color:var(--muted)}
+.hero-bar{height:7px;margin-top:14px;background:var(--border);border-radius:99px;overflow:hidden}
+.hero-bar>div{height:100%;background:linear-gradient(90deg,var(--orange),var(--green));border-radius:99px;transition:width .4s}
+.mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini-stat{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:14px}
+.mini-stat .n{font-size:21px;font-weight:750}
+.mini-stat .l{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
+.quick-card{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.quick-card .btn{padding:7px 11px}
+.check-tools{display:flex;align-items:center;gap:6px;margin:-8px 0 14px;flex-wrap:wrap}
+.tool-label{font-size:10.5px;color:var(--muted);margin-right:2px}
+.filter-sel.status-filter{min-width:105px}
+.cl-item{box-shadow:0 1px 0 rgba(255,255,255,.015)}
+.cl-item:hover{border-color:rgba(249,115,22,.25)}
+.cl-item.done .cl-check{box-shadow:0 0 0 3px rgba(34,197,94,.07)}
+.cl-title{line-height:1.35}
+.sec-hd{cursor:pointer;padding:5px 0;border-radius:4px}
+.sec-hd:hover{background:rgba(255,255,255,.02)}
+.sec-toggle{color:var(--muted);margin-right:3px;transition:transform .2s}
+.sec-toggle.collapsed{transform:rotate(-90deg)}
+.empty-state{background:var(--surface);border:1px dashed var(--border);border-radius:7px;padding:36px;text-align:center;color:var(--muted)}
+.empty-state strong{display:block;color:var(--fg);font-size:13px;margin-bottom:4px}
+.kbd{font-family:ui-monospace,monospace;font-size:9px;padding:2px 5px;border:1px solid var(--border);border-bottom-width:2px;border-radius:3px;color:var(--muted)}
+.toast{position:fixed;right:20px;bottom:20px;z-index:9999;background:#11151f;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:6px;padding:9px 12px;font-size:11.5px;color:var(--fg);opacity:0;transform:translateY(8px);pointer-events:none;transition:all .2s}
+.toast.show{opacity:1;transform:translateY(0)}
+.data-card{margin-top:12px}
+.data-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.data-copy{font-size:11px;color:var(--muted);line-height:1.5}
+@media(max-width:800px){.dash-hero{grid-template-columns:1fr}.top-actions{width:100%}.data-row{align-items:flex-start;flex-direction:column}}
+@media(max-width:680px){
+  .page{padding:18px 14px 72px}
+  .topbar{align-items:flex-start;flex-direction:column}
+  .hero-pct{font-size:36px}
+  .mini-stats{grid-template-columns:1fr 1fr}
+  .check-tools{margin-top:-4px}
+  .kbd{display:none}
+}
+
+
+/* ── v1.2 Visual & Interaction Upgrade ─────────────────────────────────── */
+:root{
+  --gold:#f59e0b;--cyan:#38bdf8;--panel:#121722;--panel2:#171c28;
+  --glass:rgba(17,22,32,.78);--ease:cubic-bezier(.2,.8,.2,1);
+}
+*{scrollbar-width:thin;scrollbar-color:#33394b transparent}
+body{background:
+  radial-gradient(900px 420px at 75% -10%,rgba(249,115,22,.10),transparent 55%),
+  radial-gradient(760px 460px at 10% 100%,rgba(56,189,248,.05),transparent 55%),
+  #0c0f15}
+#app{position:relative}
+#sidebar{width:248px;min-width:248px;background:linear-gradient(180deg,#151923 0%,#10131b 100%);box-shadow:16px 0 40px rgba(0,0,0,.18);transition:width .28s var(--ease),min-width .28s var(--ease)}
+#sidebar .sb-logo{padding:15px 15px 14px 16px;gap:10px}
+.brand-mark{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(145deg,#ff8a3d,#e85d04);color:#fff;box-shadow:0 8px 20px rgba(249,115,22,.22)}
+.brand-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sb-title{font-size:13px;letter-spacing:.16em}
+.sb-subtitle{font-size:9px;color:#788297;text-transform:uppercase;letter-spacing:.12em}
+.sidebar-collapse{margin-left:auto;width:28px;height:28px;border:1px solid var(--border);border-radius:7px;color:#7b8498;display:grid;place-items:center;background:rgba(255,255,255,.02)}
+.sidebar-collapse:hover{color:var(--fg);border-color:rgba(249,115,22,.45);background:rgba(249,115,22,.06)}
+.side-project{margin:12px 12px 8px;padding:12px;border:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));border-radius:10px}
+.side-project-top{display:flex;align-items:center;justify-content:space-between;font-size:8px;letter-spacing:.14em;color:#6d768a;text-transform:uppercase;margin-bottom:7px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.08)}
+.side-project strong{display:block;font-size:11px;line-height:1.35;margin-bottom:10px}
+.side-mini-bar{height:5px;background:#272c3b;border-radius:999px;overflow:hidden}
+.side-mini-bar>div{height:100%;background:linear-gradient(90deg,var(--orange),var(--green));border-radius:999px;transition:width .45s var(--ease)}
+.side-progress-copy{display:flex;justify-content:space-between;margin-top:7px;font-size:9.5px;color:#6f788a}
+.sb-nav{padding:8px 10px}
+.nav-item{position:relative;padding:11px 12px;border-radius:8px;gap:11px;font-size:12px;transition:all .18s var(--ease)}
+.nav-item.active{background:linear-gradient(90deg,rgba(249,115,22,.16),rgba(249,115,22,.045));border-left-color:var(--orange);box-shadow:inset 0 0 0 1px rgba(249,115,22,.08)}
+.nav-item.active::after{content:'';position:absolute;right:8px;width:5px;height:5px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px rgba(249,115,22,.08)}
+.sb-footer{padding:13px 16px;color:#6c7486;line-height:1.5}
+#main{background:linear-gradient(180deg,rgba(255,255,255,.012),transparent 30%)}
+.page{padding:28px 28px 36px;max-width:1180px}
+.page-hd h1{font-size:22px;letter-spacing:-.02em}
+.page-hd p{font-size:11px}
+.page-hd:after{content:'';display:block;width:44px;height:2px;margin-top:10px;border-radius:99px;background:linear-gradient(90deg,var(--orange),transparent)}
+.topbar{padding:9px 0 3px}
+.status-pill{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.07);backdrop-filter:blur(10px)}
+.icon-btn{padding:7px 10px;border-radius:7px;background:rgba(255,255,255,.018);transition:all .18s var(--ease)}
+.icon-btn .button-icon{color:var(--orange);font-weight:700;margin-right:1px}
+.icon-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.15)}
+.dash-hero{grid-template-columns:minmax(0,1.55fr) minmax(320px,.8fr);gap:14px}
+.hero-card{position:relative;overflow:hidden;min-height:224px;padding:23px;border-radius:13px;background:
+  radial-gradient(circle at 88% 20%,rgba(249,115,22,.16),transparent 24%),
+  linear-gradient(145deg,rgba(249,115,22,.09),rgba(34,197,94,.025) 58%,rgba(255,255,255,.012));
+  box-shadow:0 18px 50px rgba(0,0,0,.18)}
+.hero-card:before{content:'';position:absolute;right:-70px;bottom:-90px;width:240px;height:240px;border:1px solid rgba(249,115,22,.08);border-radius:50%;box-shadow:0 0 0 28px rgba(249,115,22,.018),0 0 0 56px rgba(249,115,22,.013)}
+.hero-title{letter-spacing:.16em;font-size:10px}
+.hero-pct{font-size:52px;letter-spacing:-.05em}
+.hero-sub{font-size:12px}
+.hero-bar{height:9px;background:#292f3e}
+.hero-bar>div{background:linear-gradient(90deg,#f97316 0%,#f59e0b 52%,#22c55e 100%);box-shadow:0 0 16px rgba(249,115,22,.18)}
+.quick-card .btn{padding:8px 12px;border-radius:8px}
+.btn{border-radius:7px;transition:transform .18s var(--ease),box-shadow .18s var(--ease),opacity .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-orange{box-shadow:0 8px 18px rgba(249,115,22,.16)}
+.mini-stats{grid-template-columns:repeat(2,1fr);gap:10px}
+.mini-stat{position:relative;overflow:hidden;padding:16px;border-radius:11px;background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.015));transition:transform .18s var(--ease),border-color .18s}
+.mini-stat:hover{transform:translateY(-2px);border-color:rgba(249,115,22,.25)}
+.mini-stat .n{font-size:25px;letter-spacing:-.03em}
+.mini-stat .l{letter-spacing:.12em}
+.insight-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 14px}
+.insight-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px;border:1px solid rgba(255,255,255,.07);border-radius:10px;background:rgba(255,255,255,.018);transition:all .18s var(--ease)}
+.insight-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
+.insight-icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:800;flex:0 0 auto}
+.insight-icon.orange{background:rgba(249,115,22,.12);color:var(--orange)}
+.insight-icon.green{background:rgba(34,197,94,.10);color:var(--green)}
+.insight-icon.blue{background:rgba(56,189,248,.10);color:var(--cyan)}
+.insight-card{min-width:0}
+.insight-copy{min-width:0;flex:1}.insight-copy strong{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#8b95aa;margin-bottom:3px}.insight-copy span{display:block;font-size:11px;color:#d2d8e3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.insight-arrow{color:#596273;transition:transform .18s}.insight-card:hover .insight-arrow{transform:translateX(3px);color:#9aa3b4}
+.dash-grid{gap:14px}
+.dash-card,.card{border-radius:11px;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.012));box-shadow:0 8px 30px rgba(0,0,0,.08)}
+.dash-card{padding:19px}
+.card{padding:19px}
+.card-label{margin-bottom:15px}
+.ring-wrap{width:90px;height:90px}.ring-pct{font-size:16px}
+.big-pct{font-size:33px}
+.pbar-track{height:6px;background:#2a3040}.pbar-fill{box-shadow:0 0 12px rgba(249,115,22,.12)}
+.search-wrap{padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.018);transition:border-color .18s,box-shadow .18s}
+.search-wrap:focus-within{border-color:rgba(249,115,22,.48);box-shadow:0 0 0 3px rgba(249,115,22,.06)}
+select.filter-sel{border-radius:8px;background-color:rgba(255,255,255,.018)}
+.check-tools{margin:-7px 0 13px;gap:7px}
+.filter-chip{padding:6px 9px;border-radius:999px;font-size:10.5px;border:1px solid var(--border);background:rgba(255,255,255,.015);color:#707a8f}.filter-chip:hover{color:var(--fg);border-color:rgba(255,255,255,.14)}.filter-chip.active{color:#fff;border-color:rgba(249,115,22,.35);background:rgba(249,115,22,.10)}
+.tool-divider{width:1px;height:16px;background:var(--border);margin:0 2px}
+.cl-item{border-radius:9px;margin-bottom:7px;background:linear-gradient(180deg,rgba(255,255,255,.018),rgba(255,255,255,.012));transition:transform .18s var(--ease),border-color .18s,background .18s,box-shadow .18s}
+.cl-item:hover{transform:translateY(-1px);border-color:rgba(249,115,22,.28);box-shadow:0 8px 22px rgba(0,0,0,.10)}
+.cl-item.done{background:linear-gradient(180deg,rgba(34,197,94,.06),rgba(34,197,94,.025));border-color:rgba(34,197,94,.22)}
+.cl-row{padding:11px 13px;align-items:center}
+.cl-check{width:18px;height:18px;border-radius:5px;border-width:1px}.cl-check.done{box-shadow:0 0 0 4px rgba(34,197,94,.08)}
+.cl-title{font-size:13.5px}.cl-code{font-size:10px}
+.cl-item.done .cl-title{text-decoration:none;color:#a0aa7e}
+.cl-detail{padding:0 13px 12px 43px;background:rgba(0,0,0,.08)}
+.sec-hd{padding:7px 8px;margin-left:-8px;margin-right:-8px;border-radius:8px}.sec-hd:hover{background:rgba(255,255,255,.035)}
+.sec-name{font-size:10px}
+.subsec-name{margin:10px 0 5px 2px;color:#7b8498}
+.empty-state{border-radius:10px;padding:46px 28px;background:rgba(255,255,255,.015)}
+.team-list{border-radius:10px;background:rgba(255,255,255,.015)}
+.team-row{padding:13px 15px;transition:background .16s}.team-row:hover{background:rgba(255,255,255,.025)}
+.team-av{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,rgba(249,115,22,.16),rgba(249,115,22,.04));border:1px solid rgba(249,115,22,.12);color:#ffae78}
+.team-del{opacity:.25}.team-row:hover .team-del{opacity:1}
+.warn-banner{border-radius:9px;backdrop-filter:blur(10px);background:rgba(249,115,22,.065)}
+.toast{right:24px;bottom:24px;padding:10px 13px;border-radius:9px;background:rgba(16,20,28,.94);backdrop-filter:blur(18px);box-shadow:0 16px 40px rgba(0,0,0,.28)}
+.side-project,.hero-card,.insight-card,.dash-card,.card,.cl-item{backdrop-filter:blur(10px)}
+body.sidebar-collapsed #sidebar{width:82px;min-width:82px}
+body.sidebar-collapsed .brand-copy,body.sidebar-collapsed .side-project,body.sidebar-collapsed .sb-footer{display:none}
+body.sidebar-collapsed .sb-logo{padding:15px 12px;justify-content:center}.sidebar-collapse{transition:transform .25s var(--ease)}
+body.sidebar-collapsed .sidebar-collapse{transform:rotate(180deg);margin-left:0}
+body.sidebar-collapsed .nav-item{justify-content:center;padding:11px 8px;font-size:0}.nav-item svg{flex:0 0 auto}
+body.sidebar-collapsed .nav-item.active::after{right:6px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(4,7,12,.62);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;padding-top:12vh;z-index:10000;opacity:0;transition:opacity .2s}
+.modal-backdrop.open{display:flex;opacity:1}
+.command-modal{width:min(620px,calc(100vw - 28px));border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,#151a25,#10141c);border-radius:14px;box-shadow:0 30px 90px rgba(0,0,0,.42);overflow:hidden;transform:translateY(-6px) scale(.985);transition:transform .2s var(--ease)}
+.modal-backdrop.open .command-modal{transform:translateY(0) scale(1)}
+.command-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 18px 10px}.command-kicker{font-size:9px;color:var(--orange);font-weight:800;letter-spacing:.16em}.command-head h2{font-size:18px;margin-top:3px}.modal-close{padding:5px 8px;border:1px solid var(--border);border-radius:6px;color:#7e8799}.command-search-wrap{display:flex;align-items:center;gap:10px;margin:0 18px 12px;padding:10px 12px;border:1px solid var(--border);background:rgba(255,255,255,.02);border-radius:8px}.command-search-wrap input{width:100%;border:0;outline:0;background:transparent;color:var(--fg)}.command-list{max-height:380px;overflow:auto;padding:0 10px 10px}.command-item{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:8px;color:#b9c2d1}.command-item:hover,.command-item.selected{background:rgba(249,115,22,.08);color:#fff}.command-item .ci-main{flex:1}.command-item strong{display:block;font-size:12px}.command-item span{display:block;font-size:10px;color:#697386;margin-top:2px}.command-key{font-family:ui-monospace,monospace;font-size:9px;color:#687386;border:1px solid var(--border);padding:2px 5px;border-radius:4px}.command-foot{display:flex;gap:16px;padding:9px 18px;border-top:1px solid rgba(255,255,255,.05);font-size:9px;color:#616b7c}
+@media(max-width:900px){.insight-row{grid-template-columns:1fr}.dash-hero{grid-template-columns:1fr}.mini-stats{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:680px){#sidebar{width:100%;min-width:100%;box-shadow:none}.side-project,.sb-logo .sidebar-collapse{display:none}body.sidebar-collapsed #sidebar{width:100%;min-width:100%}body.sidebar-collapsed .brand-copy,body.sidebar-collapsed .side-project{display:none}.sb-nav{padding:4px}.nav-item{padding:7px 6px}.page{padding:18px 14px 78px}.top-actions{width:100%}.top-actions .icon-btn{flex:1;justify-content:center}.insight-row{gap:8px}.insight-card{padding:10px}.hero-card{min-height:210px}.ring-wrap{width:78px;height:78px}.big-pct{font-size:28px}.bar{flex-wrap:wrap}.search-wrap{min-width:100%}.filter-sel{flex:1}.command-foot{justify-content:space-between}.command-foot span:last-child{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   v2.0 — data-driven dashboard: real rulebook + TI data, richer sections,
+   keyboard navigation, cross-tab sync, print support.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.muted-copy{font-size:11.5px;color:var(--muted);line-height:1.6}
+
+/* Hero phase label */
+.hero-phase{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);background:rgba(249,115,22,.10);border:1px solid rgba(249,115,22,.22)}
+
+/* Supabase sync status pill */
+#sync-pill{cursor:default}
+#sync-dot{transition:background .25s,box-shadow .25s}
+.sync-badge{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);border:1px solid rgba(249,115,22,.3);background:rgba(249,115,22,.08);border-radius:999px;padding:2px 8px}
+
+/* Result-count readout next to the filter tools */
+.result-count{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;padding:2px 7px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.02)}
+.result-count:empty{display:none}
+
+/* Section header: progress meter + bulk fill */
+.sec-block{margin-top:0}
+.sec-hd{gap:9px}
+.sec-hd .sec-name{background:none;border:none;padding:0;text-align:left;cursor:pointer}
+.sec-hd .sec-toggle{display:grid;place-items:center;width:16px;height:16px;border-radius:4px;flex:0 0 auto}
+.sec-hd .sec-toggle:hover{color:var(--orange);background:rgba(249,115,22,.1)}
+.sec-meter{flex:1;max-width:190px;height:4px;border-radius:99px;background:#272c3b;overflow:hidden;min-width:40px}
+.sec-meter>i{display:block;height:100%;border-radius:99px;transition:width .35s var(--ease)}
+.sec-ct{font-variant-numeric:tabular-nums;min-width:42px;text-align:right}
+.sec-bulk{padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7b8498;border:1px solid var(--border);background:rgba(255,255,255,.02);opacity:0;transition:all .16s var(--ease)}
+.sec-hd:hover .sec-bulk{opacity:1}
+.sec-bulk:hover{color:var(--orange);border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.08)}
+
+/* Item meta row inside the expanded detail */
+.cl-meta{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.cl-meta>span{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:999px;padding:3px 8px}
+.cl-meta b{color:var(--orange);font-weight:700}
+.cl-note-wrap{display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap}
+.cl-note-wrap .btn{flex:0 0 auto}
+.cl-body{cursor:pointer}
+.cl-desc{white-space:pre-line}
+
+/* Keyboard focus ring on checklist rows */
+.cl-item.keyboard-focus{border-color:rgba(249,115,22,.55);box-shadow:0 0 0 3px rgba(249,115,22,.1)}
+.cl-check:focus-visible,.cl-expand:focus-visible,.sec-bulk:focus-visible,.icon-btn:focus-visible,.btn:focus-visible,.nav-item:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+
+/* Dashboard section-progress bars, grouped by checklist */
+.secbar-group{margin-bottom:16px}
+.secbar-group:last-child{margin-bottom:0}
+.secbar-group-hd{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#6d768a;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.secbar-group-hd:after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.secbar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px 18px}
+.secbar-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:5px}
+.secbar-name{font-size:11.5px;font-weight:500}
+.secbar-ct{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Recently completed rows */
+.recent-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--border)}
+.recent-row:first-child{border-top:none}
+.recent-check{flex:0 0 auto}
+.recent-title{flex:1;min-width:0;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recent-code{font-family:ui-monospace,monospace;font-size:10px;color:var(--orange);flex:0 0 auto}
+.recent-kind{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:999px;padding:2px 7px;flex:0 0 auto}
+.recent-when{font-size:10px;color:var(--muted);flex:0 0 auto;min-width:52px;text-align:right}
+
+/* Keyboard shortcut reference */
+.shortcut-modal{width:min(560px,calc(100vw - 28px));border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,#151a25,#10141c);border-radius:14px;box-shadow:0 30px 90px rgba(0,0,0,.42);overflow:hidden;transform:translateY(-6px) scale(.985);transition:transform .2s var(--ease)}
+.modal-backdrop.open .shortcut-modal{transform:translateY(0) scale(1)}
+.shortcut-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 22px;padding:4px 18px 18px}
+.shortcut-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.045)}
+.shortcut-row span{font-size:11.5px;color:#b9c2d1}
+.shortcut-keys{display:flex;gap:4px;flex:0 0 auto}
+
+/* Print: produce a usable paper checklist */
+@media print{
+  :root{--bg:#fff;--surface:#fff;--surface2:#fff;--border:#bbb;--fg:#000;--muted:#555}
+  body{background:#fff!important}
+  #sidebar,.topbar,.check-tools,.bar,.toast,.modal-backdrop,.sec-bulk,.cl-expand,.team-del,.quick-card,.icon-btn{display:none!important}
+  #main{overflow:visible!important}
+  .page{display:none!important;padding:0!important}
+  .page.active{display:block!important}
+  .cl-item,.card,.dash-card,.hero-card{break-inside:avoid;box-shadow:none!important;background:#fff!important}
+  .cl-item.done{background:#f2fbf5!important}
+  .cl-detail{display:block!important;border-top:1px solid #ddd}
+  .cl-btn-row,.cl-note-wrap button{display:none}
+  .page{max-width:none!important}
+}
+@media(max-width:680px){
+  .sec-meter{display:none}
+  .sec-bulk{opacity:1}
+  .shortcut-grid{grid-template-columns:1fr}
+  .recent-kind,.recent-code{display:none}
+}
+/* The v1.2 900px rule forces .mini-stats to 4 columns and, being later in the
+   cascade, overrides the earlier 2-column rule -- which clips the "COMPLETED"
+   label on narrow phones. Re-assert 2 columns once there is no room for 4. */
+@media(max-width:600px){
+  .mini-stats{grid-template-columns:1fr 1fr}
+  .mini-stat .n{font-size:22px}
+  .mini-stat .l{letter-spacing:.08em}
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sb-logo">
+      <div class="brand-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+      <div class="brand-copy"><span class="sb-title">Chitrak</span><span class="sb-subtitle">Rulebook Control</span></div>
+      <button class="sidebar-collapse" onclick="toggleSidebar()" title="Collapse sidebar" aria-label="Collapse sidebar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <div class="side-project">
+      <div class="side-project-top"><span>PROJECT</span><span class="live-dot"></span></div>
+      <strong>SIEP E-Bike Challenge</strong>
+      <div class="side-mini-bar"><div id="side-progress-fill"></div></div>
+      <div class="side-progress-copy"><span id="side-progress-text">0% ready</span><span id="side-progress-count">0/0</span></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-item active" onclick="nav('dashboard')" id="nav-dashboard">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="nav('rulebook')" id="nav-rulebook">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Rulebook
+      </div>
+      <div class="nav-item" onclick="nav('inspection')" id="nav-inspection">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        TI Checklist
+      </div>
+      <div class="nav-item" onclick="nav('team')" id="nav-team">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Team
+      </div>
+    </nav>
+    <div class="sb-footer">SIEP E-Bike Challenge<br><span style="opacity:.5">v2.0 &middot; Rulebook &amp; TI</span></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-hd">
+        <h1>Dashboard</h1>
+        <p>SIEP E-Bike Challenge — Checklist Progress</p>
+      </div>
+      <div class="topbar">
+        <div class="topbar-left">
+          <span class="status-pill"><span class="status-dot"></span> Local progress saved</span>
+          <span class="status-pill" id="sync-pill"><span class="status-dot" id="sync-dot"></span><span id="sync-label">Local only</span></span>
+          <span class="status-pill" id="last-saved">Updated just now</span>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn" onclick="openCommandPalette()"><span class="button-icon">⌘</span>Command</button>
+          <button class="icon-btn" onclick="exportData()">Export backup</button>
+          <button class="icon-btn" onclick="document.getElementById('import-file').click()">Import backup</button>
+          <button class="icon-btn" onclick="printChecklist()">Print</button>
+          <button class="icon-btn" onclick="openShortcuts()" title="Keyboard shortcuts">?</button>
+        </div>
+      </div>
+      <div class="dash-hero">
+        <div class="hero-card">
+          <div class="hero-title">Overall readiness</div>
+          <div class="hero-pct" id="overall-pct">0%</div>
+          <div class="hero-sub" id="overall-sub">Loading checklist&hellip;</div>
+          <div class="hero-bar"><div id="overall-bar" style="width:0%"></div></div>
+          <div class="hero-phase" id="overall-phase">Not started</div>
+          <div class="quick-card">
+            <button class="btn btn-orange" onclick="goToNextPending()">Continue checklist</button>
+            <button class="btn btn-ghost" onclick="nav('inspection')">Open TI checklist</button>
+          </div>
+        </div>
+        <div class="mini-stats">
+          <div class="mini-stat"><div class="n" id="stat-pending">0</div><div class="l">Pending</div></div>
+          <div class="mini-stat"><div class="n" id="stat-notes">0</div><div class="l">Notes</div></div>
+          <div class="mini-stat"><div class="n" id="stat-team">0</div><div class="l">Team</div></div>
+          <div class="mini-stat"><div class="n" id="stat-done">0</div><div class="l">Completed</div></div>
+        </div>
+      </div>
+      <div class="insight-row">
+        <button class="insight-card" onclick="nav('rulebook');setStatusFilter('rb-status','pending');renderRulebook()">
+          <div class="insight-icon orange">↗</div>
+          <div class="insight-copy"><strong>Next priority</strong><span id="next-priority">No pending item selected</span></div>
+          <span class="insight-arrow">→</span>
+        </button>
+        <button class="insight-card" onclick="nav('inspection');setStatusFilter('ti-status','pending');renderInspection()">
+          <div class="insight-icon green">✓</div>
+          <div class="insight-copy"><strong>Inspection status</strong><span id="inspection-priority">Open TI checklist</span></div>
+          <span class="insight-arrow">→</span>
+        </button>
+        <button class="insight-card" onclick="nav('team')">
+          <div class="insight-icon blue">◎</div>
+          <div class="insight-copy"><strong>Team coverage</strong><span id="team-priority">Add your core team members</span></div>
+          <span class="insight-arrow">→</span>
+        </button>
+      </div>
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="card-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Rulebook Progress
+          </div>
+          <div class="big-progress">
+            <div class="ring-wrap">
+              <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border)" stroke-width="6"/>
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--orange)" stroke-width="6" stroke-linecap="round" id="ring-rb" style="stroke-dasharray:0 213.6"/>
+              </svg>
+              <div class="ring-pct" id="ring-rb-pct">0%</div>
+            </div>
+            <div>
+              <div class="big-pct" id="dash-rb-pct">0%</div>
+              <div class="big-sub"><span class="big-green" id="dash-rb-done">0</span> completed / <span id="dash-rb-tot">0</span> total</div>
+            </div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="card-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Technical Inspection
+          </div>
+          <div class="big-progress">
+            <div class="ring-wrap">
+              <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border)" stroke-width="6"/>
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round" id="ring-ti" style="stroke-dasharray:0 213.6"/>
+              </svg>
+              <div class="ring-pct" id="ring-ti-pct">0%</div>
+            </div>
+            <div>
+              <div class="big-pct" id="dash-ti-pct">0%</div>
+              <div class="big-sub"><span class="big-green" id="dash-ti-done">0</span> cleared / <span id="dash-ti-tot">0</span> items</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Section Progress</div>
+        <div id="dash-sections"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Recently Completed
+        </div>
+        <div id="dash-recent"></div>
+        <p class="muted-copy" style="margin-top:12px">This dashboard is a tracking interface only. The official Rulebook and Technical Inspection Sheet remain the authoritative sources &mdash; where the form and the rules conflict, the rule prevails.</p>
+      </div>
+    </div>
+
+    <!-- RULEBOOK -->
+    <div class="page" id="page-rulebook">
+      <div class="page-hd">
+        <h1>Rulebook</h1>
+        <p>SIEP E-Bike Challenge — Requirements Checklist</p>
+      </div>
+      <div class="card" style="padding:12px 16px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="flex:1"><div class="pbar-track"><div class="pbar-fill" id="rb-progress-bar" style="width:0%;background:var(--orange)"></div></div></div>
+          <div style="font-weight:700;min-width:38px" id="rb-pct-txt">0%</div>
+          <div style="color:var(--muted);font-size:11.5px" id="rb-ct-txt">0 / 0</div>
+        </div>
+      </div>
+      <div class="bar">
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="rb-search" placeholder="Search rules, codes, official text and your notes — battery, BMS, brake, motor, helmet...">
+          <span class="search-clear" id="rb-clear" onclick="clearSearch('rb')" style="display:none">✕</span>
+        </div>
+        <select class="filter-sel" id="rb-filter" onchange="renderRulebook()"><option value="All">All</option></select>
+        <select class="filter-sel status-filter" id="rb-status" onchange="renderRulebook()"><option value="all">Status: All</option><option value="pending">Pending</option><option value="done">Completed</option></select>
+      </div>
+      <div class="check-tools">
+        <button class="filter-chip active" data-status="all" onclick="setQuickStatus('rb','all',this)">All</button>
+        <button class="filter-chip" data-status="pending" onclick="setQuickStatus('rb','pending',this)">Pending</button>
+        <button class="filter-chip" data-status="done" onclick="setQuickStatus('rb','done',this)">Completed</button>
+        <span class="result-count" id="rb-count"></span>
+        <span class="tool-divider"></span>
+        <span class="tool-label">View</span>
+        <button class="icon-btn" onclick="setAllSections('rb',true)">Expand all</button>
+        <button class="icon-btn" onclick="setAllSections('rb',false)">Collapse all</button>
+        <span class="tool-divider"></span>
+        <span class="kbd">/</span><span class="tool-label">search</span>
+        <span class="kbd">j</span><span class="kbd">k</span><span class="tool-label">move</span>
+        <span class="kbd">x</span><span class="tool-label">tick</span>
+      </div>
+      <div id="rb-list"></div>
+    </div>
+
+    <!-- INSPECTION -->
+    <div class="page" id="page-inspection">
+      <div class="page-hd">
+        <h1>Technical Inspection</h1>
+        <p>SIEP E-Bike Challenge — TI Sheet Checklist</p>
+      </div>
+      <div class="warn-banner">
+        ⚠ This is a digital tracking aid only. The official Technical Inspection Sheet and rulebook remain the authoritative documents. Where the form and rules conflict, the rule prevails.
+      </div>
+      <div class="card" style="padding:12px 16px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="flex:1"><div class="pbar-track"><div class="pbar-fill" id="ti-progress-bar" style="width:0%;background:var(--green)"></div></div></div>
+          <div style="font-weight:700;min-width:38px" id="ti-pct-txt">0%</div>
+          <div style="color:var(--muted);font-size:11.5px" id="ti-ct-txt">0 / 0 cleared</div>
+        </div>
+      </div>
+      <div class="bar">
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="ti-search" placeholder="Search inspection items...">
+          <span class="search-clear" id="ti-clear" onclick="clearSearch('ti')" style="display:none">✕</span>
+        </div>
+        <select class="filter-sel" id="ti-filter" onchange="renderInspection()"><option value="All">All</option></select>
+        <select class="filter-sel status-filter" id="ti-status" onchange="renderInspection()"><option value="all">Status: All</option><option value="pending">Pending</option><option value="done">Cleared</option></select>
+      </div>
+      <div class="check-tools">
+        <button class="filter-chip active" data-status="all" onclick="setQuickStatus('ti','all',this)">All</button>
+        <button class="filter-chip" data-status="pending" onclick="setQuickStatus('ti','pending',this)">Pending</button>
+        <button class="filter-chip" data-status="done" onclick="setQuickStatus('ti','done',this)">Cleared</button>
+        <span class="result-count" id="ti-count"></span>
+        <span class="tool-divider"></span>
+        <span class="tool-label">View</span>
+        <button class="icon-btn" onclick="setAllSections('ti',true)">Expand all</button>
+        <button class="icon-btn" onclick="setAllSections('ti',false)">Collapse all</button>
+      </div>
+      <div id="ti-list"></div>
+    </div>
+
+    <!-- TEAM -->
+    <div class="page" id="page-team">
+      <div class="page-hd" style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <h1>Team</h1>
+          <p id="team-ct">0 members</p>
+        </div>
+        <button class="btn btn-orange" onclick="toggleAddForm()" id="add-btn" style="margin-top:4px">
+          + Add Member
+        </button>
+      </div>
+      <div id="add-form-wrap" style="display:none">
+        <div class="add-form">
+          <div style="font-weight:600;margin-bottom:12px;font-size:13px">Add Team Member</div>
+          <div class="form-row">
+            <input class="form-input" type="text" id="tm-name" placeholder="Full name" onkeydown="if(event.key==='Enter')addMember()">
+            <input class="form-input" type="text" id="tm-role" placeholder="Role (e.g. Electrical Lead)" onkeydown="if(event.key==='Enter')addMember()">
+          </div>
+          <div class="err-txt" id="tm-err" style="display:none"></div>
+          <div class="btn-row" style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-orange" onclick="addMember()">Add</button>
+            <button class="btn btn-ghost" onclick="toggleAddForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div id="team-list"></div>
+      <div class="card data-card">
+        <div class="card-label">Project Data</div>
+        <div class="data-row">
+          <div class="data-copy"><strong style="color:var(--fg)">Local backup & recovery</strong><br>Export your checklist state before making major changes. Importing replaces the current local state.</div>
+          <div class="top-actions">
+            <button class="icon-btn" onclick="exportData()">Export JSON</button>
+            <button class="icon-btn" onclick="document.getElementById('import-file').click()">Import JSON</button>
+            <button class="icon-btn" onclick="printChecklist()">Print</button>
+            <button class="icon-btn danger" onclick="resetAll()">Reset progress</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+<div id="shortcut-modal" class="modal-backdrop" onclick="if(event.target===this)closeShortcuts()">
+  <div class="shortcut-modal" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div class="command-head">
+      <div><div class="command-kicker">CHITRAK SHORTCUTS</div><h2>Keyboard reference</h2></div>
+      <button class="modal-close" onclick="closeShortcuts()">Esc</button>
+    </div>
+    <div class="shortcut-grid">
+      <div class="shortcut-row"><span>Focus search</span><span class="shortcut-keys"><span class="kbd">/</span></span></div>
+      <div class="shortcut-row"><span>Command palette</span><span class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">K</span></span></div>
+      <div class="shortcut-row"><span>Move between items</span><span class="shortcut-keys"><span class="kbd">j</span><span class="kbd">k</span></span></div>
+      <div class="shortcut-row"><span>Tick focused item</span><span class="shortcut-keys"><span class="kbd">x</span></span></div>
+      <div class="shortcut-row"><span>Expand focused item</span><span class="shortcut-keys"><span class="kbd">Enter</span></span></div>
+      <div class="shortcut-row"><span>Dashboard</span><span class="shortcut-keys"><span class="kbd">d</span></span></div>
+      <div class="shortcut-row"><span>Rulebook</span><span class="shortcut-keys"><span class="kbd">r</span></span></div>
+      <div class="shortcut-row"><span>TI checklist</span><span class="shortcut-keys"><span class="kbd">t</span></span></div>
+      <div class="shortcut-row"><span>Team</span><span class="shortcut-keys"><span class="kbd">m</span></span></div>
+      <div class="shortcut-row"><span>Next pending item</span><span class="shortcut-keys"><span class="kbd">n</span></span></div>
+      <div class="shortcut-row"><span>Shortcuts help</span><span class="shortcut-keys"><span class="kbd">?</span></span></div>
+      <div class="shortcut-row"><span>Close / blur</span><span class="shortcut-keys"><span class="kbd">Esc</span></span></div>
+    </div>
+    <div class="command-foot"><span>Progress saves automatically to this browser</span></div>
+  </div>
+</div>
+<input id="import-file" type="file" accept=".json,application/json" style="display:none">
+<div id="toast" class="toast"></div>
+<div id="command-palette" class="modal-backdrop" onclick="if(event.target===this)closeCommandPalette()">
+  <div class="command-modal" role="dialog" aria-modal="true" aria-label="Chitrak command palette">
+    <div class="command-head">
+      <div><div class="command-kicker">CHITRAK COMMAND</div><h2>Jump anywhere</h2></div>
+      <button class="modal-close" onclick="closeCommandPalette()">Esc</button>
+    </div>
+    <div class="command-search-wrap"><span>⌕</span><input id="command-search" type="text" placeholder="Search actions…" autocomplete="off"></div>
+    <div id="command-list" class="command-list"></div>
+    <div class="command-foot"><span>↑↓ Navigate</span><span>Enter Select</span><span>Esc Close</span></div>
+  </div>
+</div>
+

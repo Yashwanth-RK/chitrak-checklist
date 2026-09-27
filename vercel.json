@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "python3 _build.py && python3 _assemble.py && mkdir -p deploy && cp \"Chitrak — Rulebook Checklist.html\" deploy/index.html",
+  "outputDirectory": "deploy",
+  "installCommand": "echo 'no npm dependencies needed - the build is Python only'",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}

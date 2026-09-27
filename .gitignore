@@ -5,13 +5,11 @@
 supabase-config.json
 
 # ── Build output ──────────────────────────────────────────────────────────────
-# The dashboard is a single generated file. Commit the source; run `npm run build`
-# to produce it. deploy/ is just a copy ready for Vercel.
+# The dashboard is a single generated file. Commit the source fragments
+# (_head.html / _tail.html / _data_*.py); `npm run build` produces the output.
 Chitrak — Rulebook Checklist.html
 deploy/
-_head.html
 _new_script.html
-_tail.html
 __pycache__/
 *.pyc
 

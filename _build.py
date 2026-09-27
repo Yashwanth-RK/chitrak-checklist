@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Generates the replacement <script> block for the Chitrak dashboard."""
-import io, json
+import io, json, os
 from _data_rules import RULES
 from _data_ti import INSPECTION
 
@@ -971,14 +971,33 @@ SUPABASE_JS = io.open('_supabase_client.js', encoding='utf-8').read()
 
 
 def load_supabase_config():
-    """Credentials live in a git-ignored file so they never reach git history."""
+    """Resolve sync credentials, in order of precedence:
+
+    1. SYNC_URL / SYNC_ANON_KEY environment variables -- used by Vercel builds,
+       where the key is stored in the project's environment settings.
+    2. supabase-config.json -- local development. Git-ignored, so the key never
+       enters repository history.
+    3. Nothing -- produces a local-only build with sync disabled.
+    """
+    url = os.environ.get('SYNC_URL', '').strip()
+    key = os.environ.get('SYNC_ANON_KEY', '').strip()
+    if url and key:
+        print('sync credentials from environment (SYNC_URL / SYNC_ANON_KEY)')
+        return url, key
+    if url or key:
+        print('warning: SYNC_URL and SYNC_ANON_KEY must both be set to enable sync')
+
     try:
         cfg = json.load(io.open('supabase-config.json', encoding='utf-8'))
     except Exception:
-        print('warning: supabase-config.json missing or unreadable '
+        print('warning: no sync credentials found '
+              '(set SYNC_URL + SYNC_ANON_KEY, or create supabase-config.json) '
               '-- building in local-only mode')
         return '', ''
-    return cfg.get('url', ''), cfg.get('anonKey', '')
+    url, key = cfg.get('url', ''), cfg.get('anonKey', '')
+    print('sync credentials from supabase-config.json' if url and key
+          else 'warning: supabase-config.json incomplete -- building in local-only mode')
+    return url, key
 
 
 SYNC_URL, SYNC_KEY = load_supabase_config()
