@@ -48,6 +48,14 @@ create index if not exists rule_state_updated_idx      on public.rule_state (upd
 create index if not exists inspection_state_updated_idx on public.inspection_state (updated_at);
 create index if not exists team_members_created_idx     on public.team_members (created_at);
 
+-- ── Row population ──────────────────────────────────────────────────────────
+-- No seed data is required. The client upserts a row for EVERY item on save, so
+-- both tables fill themselves on first use (173 + 66 rows). Untouched items are
+-- stamped with the epoch rather than now(), so that a default item left behind by
+-- a boot which then failed cannot out-rank real team progress in the
+-- last-write-wins merge. Tables may therefore sit empty until somebody ticks
+-- something -- that is expected, not a broken setup.
+
 -- ── Row Level Security ──────────────────────────────────────────────────────
 -- Enabled so that turning on Supabase Auth later is a one-line change rather
 -- than a rewrite. While no auth is configured the anon role is allowed through

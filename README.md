@@ -59,15 +59,17 @@ To start a fresh project, run the schema in [`supabase/schema.sql`](supabase/sch
 
 | Table | Grain | Written when |
 |---|---|---|
-| `rule_state` | one row per rulebook item | a rulebook checkbox is ticked |
-| `inspection_state` | one row per TI item | a TI checkbox is ticked |
+| `rule_state` | one row per rulebook item (173) | any change, or the first save |
+| `inspection_state` | one row per TI item (66) | any change, or the first save |
 
-Un-ticking a box **deletes** the row, so the table is a sparse set of *completed* items
-rather than a flag per item. Writes are upserts keyed on the item's stable id, which is
-why the same item resolves to the same row across browsers and reloads.
+The client pushes **a row for every item**, not just ticked ones, so the tables
+hold ~239 rows. Untouched items are stamped with the epoch
+(`1970-01-01T00:00:00Z`) rather than `now()` — otherwise a default item stamped by
+a boot that then failed would out-rank real team progress in the last-write-wins
+merge. Freshly created tables are empty; the app populates them on first save, so
+seeding is not required.
 
-Sync is last-write-wins per item. Two people ticking the same item within the same
-second can race; in practice the UI hides the conflict because both end up ticked.
+Sync is last-write-wins per item, comparing `updated_at`.
 
 ---
 
